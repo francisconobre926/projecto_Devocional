@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-DevocionalApplication<devocional>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.nobre.devocional.DevocionalApplication",
+            "projectName": "devocional",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
