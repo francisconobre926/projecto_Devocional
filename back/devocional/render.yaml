@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: devocional-back
+    env: java
+    plan: free
+    rootDir: back/devocional
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/devocional-0.0.1-SNAPSHOT.jar
