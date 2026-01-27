@@ -31,7 +31,7 @@ export default function Header({ darkMode }) {
 
   const [open, setOpen] = useState(false);
   const [mobileDevOpen, setMobileDevOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const devocionalLinks = useMemo(
     () => [
@@ -44,22 +44,23 @@ export default function Header({ darkMode }) {
     []
   );
 
-  const syncAuth = () => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  };
+
+
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem("token");
+  });
 
   useEffect(() => {
-    syncAuth();
+    const handler = () => {
+      setIsAuthenticated(!!localStorage.getItem("token"));
+    };
 
-    // Atualiza automaticamente quando login/logout acontecer
-    const handler = () => syncAuth();
-    window.addEventListener('auth:changed', handler);
-    window.addEventListener('storage', handler);
+    window.addEventListener("auth:changed", handler);
+    window.addEventListener("storage", handler);
 
     return () => {
-      window.removeEventListener('auth:changed', handler);
-      window.removeEventListener('storage', handler);
+      window.removeEventListener("auth:changed", handler);
+      window.removeEventListener("storage", handler);
     };
   }, []);
 
@@ -75,11 +76,10 @@ export default function Header({ darkMode }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300 ${
-        darkMode
-          ? 'bg-slate-900/95 border-slate-800 shadow-lg shadow-slate-900/50'
-          : 'bg-white/95 border-gray-200 shadow-sm'
-      }`}
+      className={`sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300 ${darkMode
+        ? 'bg-slate-900/95 border-slate-800 shadow-lg shadow-slate-900/50'
+        : 'bg-white/95 border-gray-200 shadow-sm'
+        }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
@@ -97,9 +97,8 @@ export default function Header({ darkMode }) {
 
                 <SheetContent
                   side="left"
-                  className={`w-[280px] p-0 border-r ${
-                    darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white'
-                  }`}
+                  className={`w-[280px] p-0 border-r ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white'
+                    }`}
                 >
                   <div className="flex flex-col h-full">
                     {/* Cabeçalho do Menu */}
@@ -137,9 +136,8 @@ export default function Header({ darkMode }) {
                           </button>
 
                           <div
-                            className={`overflow-hidden transition-all duration-300 ${
-                              mobileDevOpen ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
-                            }`}
+                            className={`overflow-hidden transition-all duration-300 ${mobileDevOpen ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
+                              }`}
                           >
                             <div className="pl-9 flex flex-col gap-1 mt-1">
                               {devocionalLinks.map((link) => (
@@ -163,7 +161,7 @@ export default function Header({ darkMode }) {
                         >
                           Sobre nós
                         </NavLink>
-                        
+
 
                         {/* Perfil só se logado */}
                         {isAuthenticated && (
@@ -216,9 +214,8 @@ export default function Header({ darkMode }) {
                 <Heart className="h-5 w-5 text-white" fill="currentColor" />
               </div>
               <span
-                className={`text-xl font-black tracking-tight hidden xs:block ${
-                  darkMode ? 'text-slate-100' : 'text-gray-900'
-                }`}
+                className={`text-xl font-black tracking-tight hidden xs:block ${darkMode ? 'text-slate-100' : 'text-gray-900'
+                  }`}
               >
                 Devocional<span className="text-indigo-600">App</span>
               </span>
@@ -232,8 +229,7 @@ export default function Header({ darkMode }) {
                     <NavLink
                       to="/"
                       className={({ isActive }) =>
-                        `px-4 py-2 text-sm font-bold transition-colors ${
-                          isActive ? 'text-indigo-600' : darkMode ? 'text-slate-300' : 'text-gray-700'
+                        `px-4 py-2 text-sm font-bold transition-colors ${isActive ? 'text-indigo-600' : darkMode ? 'text-slate-300' : 'text-gray-700'
                         }`
                       }
                     >
@@ -247,9 +243,8 @@ export default function Header({ darkMode }) {
                     </NavigationMenuTrigger>
 
                     <NavigationMenuContent
-                      className={`absolute w-[240px] p-2 rounded-xl border shadow-xl ${
-                        darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
-                      }`}
+                      className={`absolute w-[240px] p-2 rounded-xl border shadow-xl ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
+                        }`}
                     >
                       <ul className="grid gap-1">
                         {devocionalLinks.map((link) => (
@@ -294,9 +289,8 @@ export default function Header({ darkMode }) {
               <div className="hidden sm:flex items-center gap-2">
                 <NavLink
                   to="/auth/login"
-                  className={`text-sm font-bold px-3 py-2 transition-colors ${
-                    darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
-                  }`}
+                  className={`text-sm font-bold px-3 py-2 transition-colors ${darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                    }`}
                 >
                   Entrar
                 </NavLink>
@@ -311,11 +305,10 @@ export default function Header({ darkMode }) {
               <div className="hidden sm:flex items-center gap-2">
                 <button
                   onClick={() => navigate('/perfil')}
-                  className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
-                    darkMode
-                      ? 'border-slate-800 bg-slate-800 text-slate-400 hover:border-indigo-500'
-                      : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-indigo-600'
-                  }`}
+                  className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${darkMode
+                    ? 'border-slate-800 bg-slate-800 text-slate-400 hover:border-indigo-500'
+                    : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-indigo-600'
+                    }`}
                   title="Meu perfil"
                 >
                   <User className="h-5 w-5" />
@@ -323,11 +316,10 @@ export default function Header({ darkMode }) {
 
                 <button
                   onClick={logout}
-                  className={`h-10 px-4 rounded-full text-sm font-bold inline-flex items-center gap-2 border transition-all ${
-                    darkMode
-                      ? 'border-slate-800 text-slate-300 hover:text-white hover:border-indigo-500'
-                      : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300'
-                  }`}
+                  className={`h-10 px-4 rounded-full text-sm font-bold inline-flex items-center gap-2 border transition-all ${darkMode
+                    ? 'border-slate-800 text-slate-300 hover:text-white hover:border-indigo-500'
+                    : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                    }`}
                   title="Sair"
                 >
                   <LogOut className="h-4 w-4" />
@@ -342,11 +334,10 @@ export default function Header({ darkMode }) {
             {/* Mobile: atalho rápido */}
             <button
               onClick={() => (isAuthenticated ? navigate('/perfil') : navigate('/auth/login'))}
-              className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all lg:hidden ${
-                darkMode
-                  ? 'border-slate-800 bg-slate-800 text-slate-400 hover:border-indigo-500'
-                  : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-indigo-600'
-              }`}
+              className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all lg:hidden ${darkMode
+                ? 'border-slate-800 bg-slate-800 text-slate-400 hover:border-indigo-500'
+                : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-indigo-600'
+                }`}
               title={isAuthenticated ? 'Perfil' : 'Entrar'}
             >
               {isAuthenticated ? <User className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}

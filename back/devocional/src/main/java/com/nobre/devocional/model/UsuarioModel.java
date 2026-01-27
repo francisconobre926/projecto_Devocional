@@ -41,11 +41,12 @@ public class UsuarioModel implements UserDetails {
     @Column(unique = true)
     private String email;
 
-
     private String senha;
 
-
     private boolean ativo = true;
+
+
+    private String telWhatsapp;
 
     public void ativarUsuario() {
         this.ativo = true;
@@ -55,18 +56,19 @@ public class UsuarioModel implements UserDetails {
         this.ativo = false;
     }
 
+
+
     @OneToMany(mappedBy = "usuario")
     private List<Devocional> devocionais;
 
+    @OneToMany(mappedBy = "usuario")
+    private List<Categoria> categorias;
 
-
-    
     @CreationTimestamp
     private Instant createdTimestamp;
 
     @UpdateTimestamp
     private Instant updatedTimestamp;
-
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;

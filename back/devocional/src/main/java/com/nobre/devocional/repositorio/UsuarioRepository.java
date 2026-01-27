@@ -15,4 +15,6 @@ public interface UsuarioRepository extends JpaRepository<UsuarioModel, String> {
 
         Optional<UsuarioModel> findById(String id);
 
+        Optional<UsuarioModel> findByTelWhatsapp(String telWhatsapp);
+
 }

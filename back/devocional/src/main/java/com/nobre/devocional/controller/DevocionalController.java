@@ -45,15 +45,13 @@ public class DevocionalController {
 
     @GetMapping("/todos")
     public ResponseEntity<Page<ListarDevocional>> listarTodosDevocionais(
-            @RequestHeader("Authorization") String authHeader,
             @RequestParam(defaultValue = "0") int pag,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<ListarDevocional> devocionais = devocionalService.listarDevocionais(authHeader, pag, size);
+        Page<ListarDevocional> devocionais = devocionalService.listarDevocionais(pag, size);
         return ResponseEntity.ok(devocionais);
     }
 
-    
     @GetMapping("/partilhados")
     public ResponseEntity<Page<ListarDevocional>> listarDevocionaisPartilhados(
             @RequestParam(defaultValue = "0") int pag,

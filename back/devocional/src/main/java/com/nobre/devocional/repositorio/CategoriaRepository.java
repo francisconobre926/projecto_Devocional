@@ -10,14 +10,19 @@ import org.springframework.data.domain.Page;
 
 import com.nobre.devocional.model.Categoria;
 
-
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
     Optional<Categoria> findByNome(String nome);
-    
+
+    Page<Categoria> findByUsuarioUsuarioId(String usuarioId, Pageable pageable);
+
+    Optional<Categoria> findByNomeAndAtivoTrueAndUsuarioUsuarioId(String nome, String usuarioId);
+
     Optional<Categoria> findByNomeAndAtivoTrue(String nome);
 
-    Page<Categoria> findByAtivoTrue(Pageable pageable);
+    Optional<Categoria> findByAtivoTrueAndUsuarioUsuarioId(String usuarioId);
+
+    Page<Categoria> findByAtivoTrueAndUsuarioUsuarioId(String usuarioId, Pageable pageable);
 
 }

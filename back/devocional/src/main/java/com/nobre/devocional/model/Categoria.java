@@ -28,6 +28,11 @@ public class Categoria {
     @OneToMany(mappedBy = "categoria")
     private List<Devocional> devocionais;
 
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private UsuarioModel usuario;
+
+
 
     private boolean ativo = true;
 

@@ -1,129 +1,3 @@
-
-
-// import React, { useEffect, useState } from 'react';
-// import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
-// import api from './services/api';
-// import Login from './pages/Login';
-// import Register from './pages/Register';
-// import CreateDevotional from './pages/CreateDevotional';
-// import DevotionalsList from './pages/DevotionalsList';
-// import Home from './pages/Home';
-// import Devotionals from './pages/Devotionals';
-// import ProtectedLayout from './components/ProtectedLayout';
-// import MyDevotionalsPage from './pages/MyDevotional';
-// import SharedDevotionalsPage from './pages/SharedDevotional';
-// import PublicLayout from './components/PublicLayout';
-
-
-
-// function App() {
-//   const [isAuthenticated, setIsAuthenticated] = useState(false);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const token = localStorage.getItem('token');
-//     const usuario = localStorage.getItem('usuario');
-
-//     if (token && usuario) {
-//       setIsAuthenticated(true);
-//       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-//     }
-
-//     setLoading(false);
-//   }, []);
-
-//   const [devotionals, setDevotionals] = useState([]);
-
-//   if (loading) {
-//     return <div>Carregando...</div>;
-//   }
-
-
-//   return (
-//     <Router>
-//       <Routes>
-
-//         <Route path="/" element={<Navigate to="/home" />} />
-
-//         {/* Públicas */}
-//         <Route
-//           path="/auth/login"
-//           element={
-//             isAuthenticated
-//               ? <Navigate to="/home" />
-//               : <Login setIsAuthenticated={setIsAuthenticated} />
-//           }
-//         />
-
-//         <Route
-//           path="/auth/register"
-//           element={
-//             isAuthenticated
-//               ? <Navigate to="/home" />
-//               : <Register />
-//           }
-//         />
-
-//         {/* Protegidas */}
-//         <Route
-//           path="/home"
-//           element={
-//             <ProtectedLayout>
-//               <Home />
-//             </ProtectedLayout>
-//           }
-//         />
-
-//         <Route
-//           path="/devocionais/partilhados"
-//           element={
-//             <PublicLayout>
-//               <SharedDevotionalsPage />
-//             </PublicLayout>
-//           }
-//         />
-
-
-
-//         <Route
-//           path="/devocionais/nova"
-//           element={
-//             <ProtectedLayout>
-//               <CreateDevotional />
-//             </ProtectedLayout>
-//           }
-//         />
-
-//         <Route
-//           path="/devotionals"
-//           element={
-//             <ProtectedLayout>
-//               <MyDevotionalsPage />
-//             </ProtectedLayout>
-//           }
-//         />
-
-//         {/* Fallback */}
-//         <Route
-//           path="*"
-//           element={
-//             isAuthenticated
-//               ? <Navigate to="/home" />
-//               : <Navigate to="/auth/login" />
-//           }
-//         />
-
-//       </Routes>
-//     </Router>
-//   );
-// }
-
-// export default App;
-
-
-
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -139,6 +13,7 @@ import SharedDevotionalsPage from './pages/SharedDevotional';
 import ProtectedLayout from './components/ProtectedLayout';
 import PublicLayout from './components/PublicLayout';
 import PostGenerator from './pages/PostGenerator';
+import CategoriasPage from './pages/CategoriasPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -254,7 +129,16 @@ function App() {
         />
 
         <Route
-          path="/devotionals/gerar"
+          path="/devocionais/categorias"
+          element={
+            <PublicLayout>
+              <CategoriasPage />
+            </PublicLayout>
+          }
+        />
+
+        <Route
+          path="/devocionais/gerar"
           element={
             <ProtectedLayout isAuthenticated={isAuthenticated}>
               <PostGenerator />

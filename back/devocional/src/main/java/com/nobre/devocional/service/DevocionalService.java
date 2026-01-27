@@ -8,28 +8,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-// import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-// import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.web.server.ResponseStatusException;
 import com.nobre.devocional.dto.devocional.AtualizarDevocionalDTO;
 import com.nobre.devocional.dto.devocional.CriarDevocionalDTO;
 import com.nobre.devocional.dto.devocional.ListarDevocional;
-// import com.nobre.devocional.dto.unsplashImagem.FotoDTOResponse;
 import com.nobre.devocional.mapper.DevocionalMapper;
-// import com.nobre.devocional.mapper.UserMapper;
 import com.nobre.devocional.model.Desafio;
 import com.nobre.devocional.model.Devocional;
+import com.nobre.devocional.model.UsuarioModel;
 import com.nobre.devocional.repositorio.CategoriaRepository;
-// import com.nobre.devocional.model.UsuarioModel;
 import com.nobre.devocional.repositorio.DesafioRepository;
 import com.nobre.devocional.repositorio.DevocionalRepository;
 import com.nobre.devocional.repositorio.UsuarioRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class DevocionalService {
@@ -60,10 +59,10 @@ public class DevocionalService {
 
         Devocional devocional = new Devocional();
         devocional.setUsuario(usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario nao encontrado!")));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado!")));
 
         devocional.setCategoria(categoriaRepository.findByNomeAndAtivoTrue(criarDevocionalDTO.categoriaNome())
-                .orElseThrow(() -> new RuntimeException("Categoria nao encontrada")));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria nao encontrada")));
 
         devocional.setReflexao(criarDevocionalDTO.reflexao());
         devocional.setVersiculo(criarDevocionalDTO.versiculo());
@@ -90,13 +89,48 @@ public class DevocionalService {
         return ResponseEntity.status(Response.SC_CREATED).body("Devocional criado com sucesso!");
     }
 
-    
-    public Page<ListarDevocional> listarDevocionais(@RequestHeader("Authorization") String authHeader,
+
+
+    @Transactional
+    public Devocional criarDevocionalPorUsuario(String usuarioId, CriarDevocionalDTO dto) {
+
+        UsuarioModel usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado!"));
+
+        var categoria = categoriaRepository.findByNomeAndAtivoTrue(dto.categoriaNome())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria nao encontrada"));
+
+        Devocional devocional = new Devocional();
+        devocional.setUsuario(usuario);
+        devocional.setCategoria(categoria);
+        devocional.setReflexao(dto.reflexao());
+        devocional.setVersiculo(dto.versiculo());
+        devocional.setCapitulo(dto.capitulo());
+        devocional.setLivro(dto.livro());
+        devocional.setImageUrl(dto.imageUrl());
+
+        // salva uma vez para garantir ID
+        Devocional devocionalSalvo=devocionalRepository.save(devocional);
+
+        // desafios (se existirem)
+        if (dto.desafios() != null && !dto.desafios().isEmpty()) {
+            List<Desafio> desafios = dto.desafios().stream()
+                    .map(d -> {
+                        Desafio desafio = devocionalMapper.toDesafio(d);
+                        desafio.setDevocional(devocionalSalvo);
+                        return desafio;
+                    }).toList();
+
+            desafioRepository.saveAll(desafios);
+            devocionalSalvo.setDesafios(desafios);
+        }
+
+        return devocionalSalvo;
+    }
+
+    public Page<ListarDevocional> listarDevocionais(
             @RequestParam(defaultValue = "0") int pag,
             @RequestParam(defaultValue = "10") int size) {
-
-        String token = authHeader.replace("Bearer ", "");
-        String usuarioId = tokenService.getUsuarioIdfromToken(token);
 
         Pageable paginacao = PageRequest.of(pag, size);
 
@@ -178,9 +212,5 @@ public class DevocionalService {
 
         return ResponseEntity.status(Response.SC_OK).body("Devocional atualizado com sucesso!");
     }
-
-    // private int randomBetween(int min, int max) {
-    // return ThreadLocalRandom.current().nextInt(min, max + 1);
-    // }
 
 }
