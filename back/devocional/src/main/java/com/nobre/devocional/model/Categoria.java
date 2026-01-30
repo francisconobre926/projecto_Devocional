@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.util.List;
 
 @Entity
@@ -32,14 +31,11 @@ public class Categoria {
     @JoinColumn(name = "usuario_id")
     private UsuarioModel usuario;
 
-
-
     private boolean ativo = true;
-
 
     public void ativar() {
         this.ativo = true;
-    }   
+    }
 
     public void desativar() {
         this.ativo = false;

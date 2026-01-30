@@ -25,4 +25,7 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
     Page<Categoria> findByAtivoTrueAndUsuarioUsuarioId(String usuarioId, Pageable pageable);
 
+
+    Optional<Categoria>findByNomeAndUsuarioUsuarioId(String nome, String usuarioId);
+
 }

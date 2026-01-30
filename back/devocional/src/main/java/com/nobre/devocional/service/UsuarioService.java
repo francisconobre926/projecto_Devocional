@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,7 +57,7 @@ public class UsuarioService {
 
             return ResponseEntity.ok(new LoginResponse(token));
 
-        } catch (BadCredentialsException e) {
+        } catch (AuthenticationException e) {
 
             // retorna JSON simples e status 401
             return ResponseEntity
@@ -80,6 +81,7 @@ public class UsuarioService {
         usuario.setNome(cadastrarUsuarioDTO.nome());
         usuario.setEmail(cadastrarUsuarioDTO.email());
         usuario.setSenha(passwordEncoder.encode(cadastrarUsuarioDTO.senha()));
+        usuario.setTelWhatsapp(cadastrarUsuarioDTO.telWhatsapp());
 
          usuarioRepository.save(usuario);
 

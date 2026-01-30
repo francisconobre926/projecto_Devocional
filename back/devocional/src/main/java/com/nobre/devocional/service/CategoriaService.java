@@ -1,19 +1,19 @@
 package com.nobre.devocional.service;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.nobre.devocional.dto.CategoriaDTO;
 import com.nobre.devocional.mapper.CategoriaMapper;
 import com.nobre.devocional.model.Categoria;
+import com.nobre.devocional.model.UsuarioModel; // ajuste para teu model real
 import com.nobre.devocional.repositorio.CategoriaRepository;
+import com.nobre.devocional.repositorio.UsuarioRepository; // ajuste para teu repo real
 
 import jakarta.transaction.Transactional;
 
@@ -29,99 +29,118 @@ public class CategoriaService {
     @Autowired
     private TokenService tokenService;
 
-    @Transactional
-    public String criarCategoria(@RequestHeader("Authorization") String authHeader,
-            @RequestBody CategoriaDTO categoriaDTO) {
+    @Autowired
+    private UsuarioRepository usuarioRepository; // necessário para associar a categoria ao usuário
 
+    private String getUsuarioId(String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String usuarioId = tokenService.getUsuarioIdfromToken(token);
+        return tokenService.getUsuarioIdfromToken(token);
+    }
 
-        categoriaRepository.findByNomeAndAtivoTrueAndUsuarioUsuarioId(categoriaDTO.nome(), usuarioId)
+    @Transactional
+    public String criarCategoria(String authHeader, CategoriaDTO categoriaDTO) {
+        String usuarioId = getUsuarioId(authHeader);
+
+        String nome = (categoriaDTO == null || categoriaDTO.nome() == null) ? "" : categoriaDTO.nome().trim();
+        if (nome.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe o nome da categoria.");
+        }
+
+        nome= nome.toLowerCase();
+        
+        // (para o mesmo usuário)
+        categoriaRepository.findByNomeAndUsuarioUsuarioId(nome, usuarioId)
                 .ifPresent(c -> {
-                    throw new RuntimeException("Categoria já existe");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Categoria já existe");
                 });
 
-        Categoria novaCategoria = new Categoria();
-        novaCategoria.setNome(categoriaDTO.nome());
-        categoriaRepository.save(novaCategoria);
+        UsuarioModel usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        Categoria nova = new Categoria();
+        nova.setNome(nome);
+        nova.setUsuario(usuario);
+        nova.ativar();
+
+        try {
+            categoriaRepository.save(nova);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            // segurança extra caso o unique do banco dispare
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Categoria já existe");
+        }
 
         return "Categoria criada com sucesso!";
     }
 
-    public Page<CategoriaDTO> listarTodasCategorias( int pagina, int tamanhoPagina) {
-
+    public Page<CategoriaDTO> listarMinhasCategorias(String authHeader, int pagina, int tamanhoPagina) {
+        String usuarioId = getUsuarioId(authHeader);
         Pageable pageable = PageRequest.of(pagina, tamanhoPagina);
-        return categoriaRepository.findAll(pageable).map(categoriaMapper::toDTO);
+
+        return categoriaRepository
+                .findByUsuarioUsuarioId(usuarioId, pageable)
+                .map(categoriaMapper::toDTO);
     }
 
-    
-    public Page<CategoriaDTO> listarTodasCategorias(@RequestHeader("Authorization") String auth, int pagina,
-            int tamanhoPagina) {
-
-        String token = auth.replace("Bearer ", "");
-        String usuarioId = tokenService.getUsuarioIdfromToken(token);
-
+    public Page<CategoriaDTO> listarMinhasCategoriasAtivas(String authHeader, int pagina, int tamanhoPagina) {
+        String usuarioId = getUsuarioId(authHeader);
         Pageable pageable = PageRequest.of(pagina, tamanhoPagina);
-        return categoriaRepository.findByUsuarioUsuarioId(usuarioId, pageable).map(categoriaMapper::toDTO);
+
+        return categoriaRepository
+                .findByAtivoTrueAndUsuarioUsuarioId(usuarioId, pageable)
+                .map(categoriaMapper::toDTO);
     }
-
-
-
-
-    public Page<CategoriaDTO> listarCategoriasAtivas(@RequestHeader("Authorization") String auth, int pagina,
-            int tamanhoPagina) {
-
-        String token = auth.replace("Bearer ", "");
-        String usuarioId = tokenService.getUsuarioIdfromToken(token);
-        Pageable pageable = PageRequest.of(pagina, tamanhoPagina);
-        return categoriaRepository.findByAtivoTrueAndUsuarioUsuarioId(usuarioId, pageable).map(categoriaMapper::toDTO);
-    }
-
-
 
     @Transactional
-    public String desativarCategoria(Long id) {
+    public String ativarCategoria(String authHeader, Long id) {
+        String usuarioId = getUsuarioId(authHeader);
 
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
+        // segurança: só dono pode mexer
+        if (categoria.getUsuario() == null || !usuarioId.equals(categoria.getUsuario().getUsuarioId())) {
+            throw new RuntimeException("Sem permissão para alterar esta categoria");
+        }
+
+        categoria.ativar();
+        categoriaRepository.save(categoria);
+        return "Categoria ativada com sucesso!";
+    }
+
+    @Transactional
+    public String desativarCategoria(String authHeader, Long id) {
+        String usuarioId = getUsuarioId(authHeader);
+
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+
+        if (categoria.getUsuario() == null || !usuarioId.equals(categoria.getUsuario().getUsuarioId())) {
+            throw new RuntimeException("Sem permissão para alterar esta categoria");
+        }
+
         categoria.desativar();
         categoriaRepository.save(categoria);
-
         return "Categoria desativada com sucesso!";
     }
 
     @Transactional
-    public String ativarCategoria(Long id) {
+    public CategoriaDTO editarCategoria(String authHeader, Long id, CategoriaDTO categoriaDTO) {
+        String usuarioId = getUsuarioId(authHeader);
 
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        categoria.ativar();
+        if (categoria.getUsuario() == null || !usuarioId.equals(categoria.getUsuario().getUsuarioId())) {
+            throw new RuntimeException("Sem permissão para editar esta categoria");
+        }
+
+        String nome = (categoriaDTO == null || categoriaDTO.nome() == null) ? "" : categoriaDTO.nome().trim();
+        if (nome.isEmpty())
+            throw new RuntimeException("Informe o nome da categoria.");
+
+        categoria.setNome(nome);
         categoriaRepository.save(categoria);
 
-        return "Categoria ativada com sucesso!";
+        return categoriaMapper.toDTO(categoria);
     }
-
-    public ResponseEntity<?> editarCategoria(@RequestHeader("Authorization") String auth,
-            @RequestBody CategoriaDTO categoriaDTO) {
-
-        String token = auth.replace("Bearer ", "");
-        String usuarioId = tokenService.getUsuarioIdfromToken(token);
-
-        Categoria categoria = categoriaRepository.findByAtivoTrueAndUsuarioUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Categoria nao encontrada para o usuario"));
-
-        if (categoriaDTO == null) {
-            return ResponseEntity.status(Response.SC_BAD_REQUEST).body("Dados invalidos para editar a categoria");
-        }
-
-        if (categoriaDTO.nome() != null) {
-            categoria.setNome(categoriaDTO.nome());
-        }
-
-        return ResponseEntity.status(Response.SC_ACCEPTED).body("Categoria actualizada com sucesso!");
-
-    }
-
 }

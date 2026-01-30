@@ -42,6 +42,9 @@ public class Config {
                         .requestMatchers("/devocional/partilhados").permitAll()
                         .requestMatchers("/whatsapp/**").permitAll()
                         .requestMatchers("/whatsapp/webhook").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/error").permitAll()
+
 
                         .requestMatchers(
                                 "/swagger-ui.html",
@@ -61,8 +64,12 @@ public class Config {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
